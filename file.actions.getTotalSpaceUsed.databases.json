@@ -1,0 +1,24 @@
+{
+  "client": {
+    "config": {
+      "endpoint": "https://cloud.appwrite.io/v1",
+      "selfSigned": false,
+      "project": "672e947a0032508ff138",
+      "key": "",
+      "jwt": "",
+      "locale": "",
+      "session": "eyJpZCI6IjY3MmU5YzVmMDAwZDQwMDhmYzYzIiwic2VjcmV0IjoiZmI4MjZkYzgwN2NiNGFhYmZhOGFkZThkZGJjZjY3Y2MyYmJiNjY2YzVlM2JlMzNhNDczN2NlYTMxMDNlMTk1NzRlMzExYjkzY2YxMDk4ZjBlOWYwMDIwZjExMGIzMWY3NzMyOGUwM2ZiN2I3MzM2NTZjZTUxZTdmNzg0MDE5YTM5MmFkMDFmNzM2NjYyMWUzMDc3NGViNzFiNTBlNWIzNTQ3MThjYWEzNjcwY2U5MjRlZTU5NmU0NDNhZDk2MjI3YTEwYTRlZDlmZDRmYTM3MWZkZjI3ZjMyMjAyYWE4NWFmOTk4ZTc2NjAwMWYxNjZjOWRiNmIyMTBkYWY1ODEwOSJ9",
+      "forwardeduseragent": ""
+    },
+    "headers": {
+      "x-sdk-name": "Node.js",
+      "x-sdk-platform": "server",
+      "x-sdk-language": "nodejs",
+      "x-sdk-version": "14.1.0",
+      "user-agent": "AppwriteNodeJSSDK/14.1.0 (win32; x64) Node.js/v20.15.0",
+      "X-Appwrite-Response-Format": "1.6.0",
+      "X-Appwrite-Project": "672e947a0032508ff138",
+      "X-Appwrite-Session": "eyJpZCI6IjY3MmU5YzVmMDAwZDQwMDhmYzYzIiwic2VjcmV0IjoiZmI4MjZkYzgwN2NiNGFhYmZhOGFkZThkZGJjZjY3Y2MyYmJiNjY2YzVlM2JlMzNhNDczN2NlYTMxMDNlMTk1NzRlMzExYjkzY2YxMDk4ZjBlOWYwMDIwZjExMGIzMWY3NzMyOGUwM2ZiN2I3MzM2NTZjZTUxZTdmNzg0MDE5YTM5MmFkMDFmNzM2NjYyMWUzMDc3NGViNzFiNTBlNWIzNTQ3MThjYWEzNjcwY2U5MjRlZTU5NmU0NDNhZDk2MjI3YTEwYTRlZDlmZDRmYTM3MWZkZjI3ZjMyMjAyYWE4NWFmOTk4ZTc2NjAwMWYxNjZjOWRiNmIyMTBkYWY1ODEwOSJ9"
+    }
+  }
+}

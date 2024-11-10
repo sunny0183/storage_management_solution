@@ -7,6 +7,7 @@ import { parseStringify } from "@/lib/utils";
 import { cookies } from "next/headers";
 import { avatarPlaceholderUrl } from "@/constants";
 import { redirect } from "next/navigation";
+import fs from "fs";
 
 const getUserByEmail = async (email: string) => {
   const { databases } = await createAdminClient();
@@ -16,6 +17,10 @@ const getUserByEmail = async (email: string) => {
     appwriteConfig.usersCollectionId,
     [Query.equal("email", [email])],
   );
+
+  // write result into a json file
+
+  fs.writeFileSync(`user.actions.getUserByEmail.result.json`, JSON.stringify(result, null, 2));
 
   return result.total > 0 ? result.documents[0] : null;
 };
@@ -30,7 +35,8 @@ export const sendEmailOTP = async ({ email }: { email: string }) => {
 
   try {
     const session = await account.createEmailToken(ID.unique(), email);
-
+    // write session into a json file
+    fs.writeFileSync(`user.actions.sendEmailOTP.session.json`, JSON.stringify(session, null, 2));
     return session.userId;
   } catch (error) {
     handleError(error, "Failed to send email OTP");
@@ -64,6 +70,10 @@ export const createAccount = async ({
       },
     );
   }
+  // write accountId into a json file
+  fs.writeFileSync(`user.actions.createAccount.accountId.json`, JSON.stringify({ accountId }, null, 2));
+  // write existingUser into a json file
+  fs.writeFileSync(`user.actions.createAccount.existingUser.json`, JSON.stringify(existingUser, null, 2));
 
   return parseStringify({ accountId });
 };
@@ -87,6 +97,11 @@ export const verifySecret = async ({
       secure: true,
     });
 
+    // write session into a json file
+    fs.writeFileSync(`user.actions.verifySecret.session.json`, JSON.stringify(session, null, 2));
+    // write account into a json file
+    fs.writeFileSync(`user.actions.verifySecret.account.json`, JSON.stringify(account, null, 2));
+
     return parseStringify({ sessionId: session.$id });
   } catch (error) {
     handleError(error, "Failed to verify OTP");
@@ -106,6 +121,11 @@ export const getCurrentUser = async () => {
     );
 
     if (user.total <= 0) return null;
+    // write user into a json file
+    fs.writeFileSync(`user.actions.getCurrentUser.user.json`, JSON.stringify(user, null, 2));
+    // write result into a json file
+    fs.writeFileSync(`user.actions.getCurrentUser.result.json`, JSON.stringify(result, null, 2));
+
 
     return parseStringify(user.documents[0]);
   } catch (error) {
@@ -119,6 +139,9 @@ export const signOutUser = async () => {
   try {
     await account.deleteSession("current");
     (await cookies()).delete("appwrite-session");
+    // write account into a json file
+    fs.writeFileSync(`user.actions.signOutUser.account.json`, JSON.stringify(account, null, 2));
+
   } catch (error) {
     handleError(error, "Failed to sign out user");
   } finally {
@@ -132,6 +155,9 @@ export const signInUser = async ({ email }: { email: string }) => {
 
     // User exists, send OTP
     if (existingUser) {
+      // write existingUser into a json file
+      fs.writeFileSync(`user.actions.signInUser.existingUser.json`, JSON.stringify(existingUser, null, 2));
+
       await sendEmailOTP({ email });
       return parseStringify({ accountId: existingUser.accountId });
     }

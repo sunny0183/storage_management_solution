@@ -3,7 +3,7 @@ import Sort from "@/components/Sort";
 import { getFiles } from "@/lib/actions/file.actions";
 import { Models } from "node-appwrite";
 import Card from "@/components/Card";
-import { getFileTypesParams } from "@/lib/utils";
+import { convertFileSize, getFileTypesParams } from "@/lib/utils";
 
 const Page = async ({ searchParams, params }: SearchParamProps) => {
   const type = ((await params)?.type as string) || "";
@@ -14,6 +14,16 @@ const Page = async ({ searchParams, params }: SearchParamProps) => {
 
   const files = await getFiles({ types, searchText, sort });
 
+  // get total file size from files.documents.map(file -> file.size)
+  // print total filesize uisng above formula and print below
+
+  // how can i ignore typescript error here?
+  // const totalFileSize = files.documents.reduce((total:any, file: any) => total + file.size, 0);
+  // ignore typescript error here
+  const totalFileSize = files.documents.reduce((total: number, file: Models.Document) => total + file.size, 0);
+  // convert totalFileSize to human readable KB, MB, GB, TB, etc
+  const totalFileSizeHumanReadable = convertFileSize(totalFileSize);
+
   return (
     <div className="page-container">
       <section className="w-full">
@@ -21,7 +31,10 @@ const Page = async ({ searchParams, params }: SearchParamProps) => {
 
         <div className="total-size-section">
           <p className="body-1">
-            Total: <span className="h5">0 MB</span>
+            {/* get total file size from files.documents.map(file -> file.size) */}
+            {/* print total filesize uisng above formula and print below */}
+            
+            Total: <span className="h5">{totalFileSizeHumanReadable}</span>
           </p>
 
           <div className="sort-container">

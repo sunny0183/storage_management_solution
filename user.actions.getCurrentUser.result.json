@@ -1,0 +1,18 @@
+{
+  "$id": "672e9c5f000d4008fc63",
+  "$createdAt": "2024-11-08T23:18:55.887+00:00",
+  "$updatedAt": "2024-11-09T23:19:16.258+00:00",
+  "name": "",
+  "registration": "2024-11-08T23:18:55.885+00:00",
+  "status": true,
+  "labels": [],
+  "passwordUpdate": "",
+  "email": "sunny0183@yahoo.com",
+  "phone": "",
+  "emailVerification": true,
+  "phoneVerification": false,
+  "mfa": false,
+  "prefs": {},
+  "targets": [],
+  "accessedAt": "2024-11-09T23:19:16.254+00:00"
+}
