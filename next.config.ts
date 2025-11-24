@@ -29,6 +29,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "ahsacontainerappdemostg.blob.core.windows.net",
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
       }
     ],
   },
