@@ -1,13 +1,12 @@
 "use server";
 
 import { createAdminClient, createSessionClient } from "@/lib/appwrite";
-import { InputFile } from "node-appwrite/file";
 import { appwriteConfig } from "@/lib/appwrite/config";
 import { ID, Models, Query } from "node-appwrite";
-import { constructFileUrl, getFileType, parseStringify } from "@/lib/utils";
+import { getFileType, parseStringify } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/actions/user.actions";
-import fs from "fs";
+import { getStorageProvider } from "@/lib/storage/factory";
 
 const handleError = (error: unknown, message: string) => {
   console.log(error, message);
@@ -20,36 +19,24 @@ export const uploadFile = async ({
   accountId,
   path,
 }: UploadFileProps) => {
-  const { storage, databases } = await createAdminClient();
-  // write storage and databases into a json file
-  fs.writeFileSync(`file.actions.uploadFile.storage.json`, JSON.stringify(storage, null, 2));
-  fs.writeFileSync(`file.actions.uploadFile.databases.json`, JSON.stringify(databases, null, 2));
-
+  const { databases } = await createAdminClient();
+  const storageProvider = getStorageProvider();
 
   try {
-    const inputFile = InputFile.fromBuffer(file, file.name);
-
-    const bucketFile = await storage.createFile(
-      appwriteConfig.bucketId,
-      ID.unique(),
-      inputFile,
-    );
-    // write bucketFile into a json file
-    fs.writeFileSync(`file.actions.uploadFile.bucketFile.json`, JSON.stringify(bucketFile, null, 2));
+    // Upload file to storage (Appwrite or Azure based on env var)
+    const uploadResult = await storageProvider.uploadFile(file);
 
     const fileDocument = {
-      type: getFileType(bucketFile.name).type,
-      name: bucketFile.name,
-      url: constructFileUrl(bucketFile.$id),
-      extension: getFileType(bucketFile.name).extension,
-      size: bucketFile.sizeOriginal,
+      type: getFileType(uploadResult.fileName).type,
+      name: uploadResult.fileName,
+      url: storageProvider.getFileUrl(uploadResult.fileId),
+      extension: getFileType(uploadResult.fileName).extension,
+      size: uploadResult.fileSize,
       owner: ownerId,
       accountId,
       users: [],
-      bucketFileId: bucketFile.$id,
+      bucketFileId: uploadResult.fileId, // Stores Azure blob name OR Appwrite bucketFileId
     };
-    // write fileDocument into a json file
-    fs.writeFileSync(`file.actions.uploadFile.fileDocument.json`, JSON.stringify(fileDocument, null, 2));
 
     const newFile = await databases
       .createDocument(
@@ -59,11 +46,10 @@ export const uploadFile = async ({
         fileDocument,
       )
       .catch(async (error: unknown) => {
-        await storage.deleteFile(appwriteConfig.bucketId, bucketFile.$id);
+        // Rollback: delete from storage if DB insert fails
+        await storageProvider.deleteFile(uploadResult.fileId);
         handleError(error, "Failed to create file document");
       });
-    // write newFile into a json file
-    fs.writeFileSync(`file.actions.uploadFile.newFile.json`, JSON.stringify(newFile, null, 2));
 
     revalidatePath(path);
     return parseStringify(newFile);
@@ -98,9 +84,6 @@ const createQueries = (
     );
   }
 
-  // write queries into a json file
-  fs.writeFileSync(`file.actions.getFiles.queries.json`, JSON.stringify(queries, null, 2));
-
   return queries;
 };
 
@@ -115,9 +98,6 @@ export const getFiles = async ({
   try {
     const currentUser = await getCurrentUser();
 
-    //  write currentUser into a json file
-    fs.writeFileSync(`file.actions.getFiles.currentUser.json`, JSON.stringify(currentUser, null, 2));
-
     if (!currentUser) throw new Error("User not found");
 
     const queries = createQueries(currentUser, types, searchText, sort, limit);
@@ -128,10 +108,6 @@ export const getFiles = async ({
       queries,
     );
 
-    // write files into a json file
-    fs.writeFileSync(`file.actions.getFiles.files.json`, JSON.stringify(files, null, 2));
-
-    console.log({ files });
     return parseStringify(files);
   } catch (error) {
     handleError(error, "Failed to get files");
@@ -146,9 +122,6 @@ export const renameFile = async ({
 }: RenameFileProps) => {
   const { databases } = await createAdminClient();
 
-  // write databases into a json file
-  fs.writeFileSync(`file.actions.renameFile.databases.json`, JSON.stringify(databases, null, 2));
-
   try {
     const newName = `${name}.${extension}`;
     const updatedFile = await databases.updateDocument(
@@ -159,8 +132,6 @@ export const renameFile = async ({
         name: newName,
       },
     );
-    // write updatedFile into a json file
-    fs.writeFileSync(`file.actions.renameFile.updatedFile.json`, JSON.stringify(updatedFile, null, 2));
 
     revalidatePath(path);
     return parseStringify(updatedFile);
@@ -185,8 +156,6 @@ export const updateFileUsers = async ({
         users: emails,
       },
     );
-    // write updatedFile into a json file. make sure the format is json not string
-    fs.writeFileSync(`file.actions.updateFileUsers.updatedFile.json`, JSON.stringify(updatedFile, null, 2));
 
     revalidatePath(path);
     return parseStringify(updatedFile);
@@ -200,11 +169,8 @@ export const deleteFile = async ({
   bucketFileId,
   path,
 }: DeleteFileProps) => {
-  const { databases, storage } = await createAdminClient();
-  // write databases and storage into a json file
-  fs.writeFileSync(`file.actions.deleteFile.databases.json`, JSON.stringify(databases, null, 2));
-  fs.writeFileSync(`file.actions.deleteFile.storage.json`, JSON.stringify(storage, null, 2));
-
+  const { databases } = await createAdminClient();
+  const storageProvider = getStorageProvider();
 
   try {
     const deletedFile = await databases.deleteDocument(
@@ -212,11 +178,9 @@ export const deleteFile = async ({
       appwriteConfig.filesCollectionId,
       fileId,
     );
-    // write deletedFile into a json file
-    fs.writeFileSync(`file.actions.deleteFile.deletedFile.json`, JSON.stringify(deletedFile, null, 2));
 
     if (deletedFile) {
-      await storage.deleteFile(appwriteConfig.bucketId, bucketFileId);
+      await storageProvider.deleteFile(bucketFileId);
     }
 
     revalidatePath(path);
@@ -226,28 +190,29 @@ export const deleteFile = async ({
   }
 };
 
+export const getFileDownloadUrl = async (bucketFileId: string) => {
+  try {
+    const storageProvider = getStorageProvider();
+    return storageProvider.getDownloadUrl(bucketFileId);
+  } catch (error) {
+    handleError(error, "Failed to get download URL");
+  }
+};
+
 // ============================== TOTAL FILE SPACE USED
 export async function getTotalSpaceUsed() {
   try {
     const { databases } = await createSessionClient();
-    // write databases into a json file
-    fs.writeFileSync(`file.actions.getTotalSpaceUsed.databases.json`, JSON.stringify(databases, null, 2));
 
     const currentUser = await getCurrentUser();
 
     if (!currentUser) throw new Error("User is not authenticated.");
-    // write currentUser into a json file
-    fs.writeFileSync(`file.actions.getTotalSpaceUsed.currentUser.json`, JSON.stringify(currentUser, null, 2));
-
 
     const files = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.filesCollectionId,
       [Query.equal("owner", [currentUser.$id])],
     );
-
-    // write files into a json file
-    fs.writeFileSync(`file.actions.getTotalSpaceUsed.files.json`, JSON.stringify(files, null, 2));
 
     const totalSpace = {
       image: { size: 0, latestDate: "" },
@@ -272,8 +237,6 @@ export async function getTotalSpaceUsed() {
       }
     });
 
-    // write totalSpace into a json file
-    fs.writeFileSync(`file.actions.getTotalSpaceUsed.totalSpace.json`, JSON.stringify(totalSpace, null, 2));
     return parseStringify(totalSpace);
   } catch (error) {
     handleError(error, "Error calculating total space used:, ");

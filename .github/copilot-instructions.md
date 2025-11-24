@@ -142,7 +142,7 @@ NEXT_PUBLIC_APPWRITE_BUCKET=<bucket_id>
 NEXT_APPWRITE_KEY=<api_key>  # Server-side only (no NEXT_PUBLIC prefix)
 ```
 
-### Appwrite Setup Requirements
+### Appwrite Setup Requirements (Current)
 
 1. Create project at https://cloud.appwrite.io
 2. Create database with two collections:
@@ -150,6 +150,19 @@ NEXT_APPWRITE_KEY=<api_key>  # Server-side only (no NEXT_PUBLIC prefix)
    - **files** - `name`, `type`, `url`, `extension`, `size`, `owner`, `accountId`, `users` (array), `bucketFileId`
 3. Create storage bucket (2GB limit referenced in code)
 4. Enable email/password authentication
+
+### Azure Storage Setup (Migration Target)
+
+Add to `.env.local` when implementing Azure storage:
+
+```
+STORAGE_PROVIDER=azure                    # Toggle: "appwrite" or "azure"
+AZURE_STORAGE_CONNECTION_STRING=...       # Azure storage account connection string
+AZURE_STORAGE_CONTAINER_NAME=user-files   # Container for file blobs
+AZURE_STORAGE_ACCOUNT_NAME=...            # Storage account name
+```
+
+**DO NOT modify storage code directly** - implement via abstraction layer per `AZURE_MIGRATION_PLAN.md`
 
 ## Common Patterns & Helpers
 
@@ -176,9 +189,25 @@ Global TypeScript interfaces for props, no imports needed. Key types:
 - `*Props` interfaces - Component/function parameter types
 - Uses `Models.Document` from `node-appwrite` for Appwrite documents
 
-## Current Branch Context
+## Current Branch Context & Migration
 
-Working on `azure-storage-account` branch (not main). This may indicate a migration from Appwrite to Azure Storage in progress.
+Working on `azure-storage-account` branch (not main). **Active migration from Appwrite to Azure Storage in progress**.
+
+### Migration Strategy
+
+**Phase 1 (Current)**: Migrate blob storage from Appwrite Storage to Azure Blob Storage
+
+- Keep Appwrite database (users & files tables) for metadata
+- Create storage abstraction layer for easy rollback
+- Use feature flag (`STORAGE_PROVIDER` env var) to toggle between providers
+- **See `AZURE_MIGRATION_PLAN.md` for detailed implementation plan**
+
+### Critical Storage Points
+
+- **Upload**: `lib/actions/file.actions.ts:uploadFile` - Uses `storage.createFile()`
+- **Delete**: `lib/actions/file.actions.ts:deleteFile` - Uses `storage.deleteFile()`
+- **URLs**: `lib/utils.ts` - `constructFileUrl()` and `constructDownloadUrl()`
+- **Field**: `bucketFileId` in files collection stores storage identifier (Appwrite ID or Azure blob name)
 
 ## Debugging Tips
 

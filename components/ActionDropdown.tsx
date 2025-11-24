@@ -19,14 +19,13 @@ import { useState } from "react";
 import Image from "next/image";
 import { Models } from "node-appwrite";
 import { actionsDropdownItems } from "@/constants";
-import Link from "next/link";
-import { constructDownloadUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   deleteFile,
   renameFile,
   updateFileUsers,
+  getFileDownloadUrl,
 } from "@/lib/actions/file.actions";
 import { usePathname } from "next/navigation";
 import { FileDetails, ShareInput } from "@/components/ActionsModalContent";
@@ -158,43 +157,40 @@ const ActionDropdown = ({ file }: { file: Models.Document }) => {
             <DropdownMenuItem
               key={actionItem.value}
               className="shad-dropdown-item"
-              onClick={() => {
+              onClick={async () => {
                 setAction(actionItem);
 
-                if (
+                if (actionItem.value === "download") {
+                  // Generate download URL and trigger download
+                  const downloadUrl = await getFileDownloadUrl(
+                    file.bucketFileId
+                  );
+                  if (downloadUrl) {
+                    const link = document.createElement("a");
+                    link.href = downloadUrl;
+                    link.download = file.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                } else if (
                   ["rename", "share", "delete", "details"].includes(
-                    actionItem.value,
+                    actionItem.value
                   )
                 ) {
                   setIsModalOpen(true);
                 }
               }}
             >
-              {actionItem.value === "download" ? (
-                <Link
-                  href={constructDownloadUrl(file.bucketFileId)}
-                  download={file.name}
-                  className="flex items-center gap-2"
-                >
-                  <Image
-                    src={actionItem.icon}
-                    alt={actionItem.label}
-                    width={30}
-                    height={30}
-                  />
-                  {actionItem.label}
-                </Link>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={actionItem.icon}
-                    alt={actionItem.label}
-                    width={30}
-                    height={30}
-                  />
-                  {actionItem.label}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Image
+                  src={actionItem.icon}
+                  alt={actionItem.label}
+                  width={30}
+                  height={30}
+                />
+                {actionItem.label}
+              </div>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
