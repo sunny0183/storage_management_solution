@@ -1,9 +1,9 @@
 {
-  "$id": "672e9c5f000d4008fc63",
-  "$createdAt": "2024-11-08T23:18:55.887+00:00",
-  "$updatedAt": "2024-11-09T23:19:16.258+00:00",
+  "$id": "6924845b0026a1972ab2",
+  "$createdAt": "2025-11-24T16:14:19.783+00:00",
+  "$updatedAt": "2025-11-24T16:14:36.686+00:00",
   "name": "",
-  "registration": "2024-11-08T23:18:55.885+00:00",
+  "registration": "2025-11-24T16:14:19.780+00:00",
   "status": true,
   "labels": [],
   "passwordUpdate": "",
@@ -13,6 +13,18 @@
   "phoneVerification": false,
   "mfa": false,
   "prefs": {},
-  "targets": [],
-  "accessedAt": "2024-11-09T23:19:16.254+00:00"
+  "targets": [
+    {
+      "$id": "6924845bcbf62d4c93da",
+      "$createdAt": "2025-11-24T16:14:19.835+00:00",
+      "$updatedAt": "2025-11-24T16:14:19.835+00:00",
+      "name": "",
+      "userId": "6924845b0026a1972ab2",
+      "providerId": null,
+      "providerType": "email",
+      "identifier": "sunny0183@yahoo.com",
+      "expired": false
+    }
+  ],
+  "accessedAt": "2025-11-24T16:14:19.780+00:00"
 }

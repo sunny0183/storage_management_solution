@@ -1,11 +1,11 @@
 {
   "image": {
-    "size": 4488,
-    "latestDate": "2024-11-08T23:57:06.614+00:00"
+    "size": 221827,
+    "latestDate": "2025-11-24T18:08:08.293+00:00"
   },
   "document": {
-    "size": 8272546,
-    "latestDate": "2024-11-09T17:43:30.534+00:00"
+    "size": 0,
+    "latestDate": ""
   },
   "video": {
     "size": 0,
@@ -19,6 +19,6 @@
     "size": 0,
     "latestDate": ""
   },
-  "used": 8277034,
+  "used": 221827,
   "all": 2147483648
 }
