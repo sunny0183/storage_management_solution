@@ -65,14 +65,18 @@ export class AzureBlobStorageProvider implements StorageProvider {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Sanitize filename for Azure metadata (remove control characters and non-ASCII)
+    // eslint-disable-next-line no-control-regex
+    const sanitizedFileName = file.name.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+
     // Upload with metadata
     await blockBlobClient.uploadData(buffer, {
       blobHTTPHeaders: {
         blobContentType: file.type || "application/octet-stream",
-        blobContentDisposition: `inline; filename="${file.name}"`,
+        blobContentDisposition: `inline; filename="${sanitizedFileName}"`,
       },
       metadata: {
-        originalFileName: file.name,
+        originalFileName: sanitizedFileName,
         uploadTimestamp: timestamp.toString(),
       },
     });

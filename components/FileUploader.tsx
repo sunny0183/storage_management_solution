@@ -30,7 +30,7 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
       const uploadPromises = acceptedFiles.map(async (file) => {
         if (file.size > MAX_FILE_SIZE) {
           setFiles((prevFiles) =>
-            prevFiles.filter((f) => f.name !== file.name),
+            prevFiles.filter((f) => f.name !== file.name)
           );
 
           return toast({
@@ -41,30 +41,77 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
               </p>
             ),
             className: "error-toast",
+            duration: 20000, // Error stays until user closes it
           });
         }
 
-        return uploadFile({ file, ownerId, accountId, path }).then(
-          (uploadedFile) => {
-            if (uploadedFile) {
+        return uploadFile({ file, ownerId, accountId, path })
+          .then((result) => {
+            if (result?.success) {
               setFiles((prevFiles) =>
-                prevFiles.filter((f) => f.name !== file.name),
+                prevFiles.filter((f) => f.name !== file.name)
               );
+              toast({
+                description: (
+                  <p className="body-2 text-white">
+                    <span className="font-semibold">{file.name}</span> uploaded
+                    successfully.
+                  </p>
+                ),
+                className: "success-toast",
+                duration: 5000, // Auto-dismiss after 5 seconds
+              });
+            } else {
+              setFiles((prevFiles) =>
+                prevFiles.filter((f) => f.name !== file.name)
+              );
+              toast({
+                description: (
+                  <p className="body-2 text-white">
+                    <span className="font-semibold">{file.name}</span> failed to
+                    upload.
+                    {result?.error && (
+                      <span className="block mt-1 text-sm opacity-80">
+                        {result.error}
+                      </span>
+                    )}
+                  </p>
+                ),
+                className: "error-toast",
+                duration: 20000, // Error stays until user closes it
+              });
             }
-          },
-        );
+          })
+          .catch((error) => {
+            setFiles((prevFiles) =>
+              prevFiles.filter((f) => f.name !== file.name)
+            );
+            toast({
+              description: (
+                <p className="body-2 text-white">
+                  <span className="font-semibold">{file.name}</span> failed to
+                  upload.
+                  <span className="block mt-1 text-sm opacity-80">
+                    {error.message || "An unexpected error occurred."}
+                  </span>
+                </p>
+              ),
+              className: "error-toast",
+              duration: 20000, // Error stays until user closes it
+            });
+          });
       });
 
       await Promise.all(uploadPromises);
     },
-    [ownerId, accountId, path],
+    [ownerId, accountId, path]
   );
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   const handleRemoveFile = (
     e: React.MouseEvent<HTMLImageElement, MouseEvent>,
-    fileName: string,
+    fileName: string
   ) => {
     e.stopPropagation();
     setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
